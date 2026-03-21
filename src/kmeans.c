@@ -23,7 +23,7 @@ static double dist(double *p1, double *p2, int dim)
     return sqrt(sum);
 }
 
-double **kmeans(Point *points, int num_points, int dim, int k, int max_iteration)
+double **kmeans(double *data, int num_points, int dim, int k, int max_iteration, int *clusters)
 {
     // Allocate memory for centroids
     // centroids is a 2D array [k][dim]
@@ -40,7 +40,7 @@ double **kmeans(Point *points, int num_points, int dim, int k, int max_iteration
         int r = rand() % num_points;
         for (int d = 0; d < dim; d++)
         {
-            centroids[i][d] = points[r].features[d];
+            centroids[i][d] = data[r * dim + d];
         }
     }
 
@@ -57,7 +57,7 @@ double **kmeans(Point *points, int num_points, int dim, int k, int max_iteration
             // Calculate distance of this point to each centroid and find the closest one
             for (int centroid = 0; centroid < k; centroid++)
             {
-                double distance = dist(points[i].features, centroids[centroid], dim);
+                double distance = dist(&data[i * dim], centroids[centroid], dim);
                 if (distance < min_d)
                 {
                     min_d = distance;
@@ -65,9 +65,9 @@ double **kmeans(Point *points, int num_points, int dim, int k, int max_iteration
                 }
             }
             // If the closest centroid is different from the current cluster assignment, update it
-            if (points[i].cluster != closest_centroid)
+            if (clusters[i] != closest_centroid)
             {
-                points[i].cluster = closest_centroid;
+                clusters[i] = closest_centroid;
                 centroid_changed = 1;
             }
         }
@@ -89,11 +89,11 @@ double **kmeans(Point *points, int num_points, int dim, int k, int max_iteration
         // Sum up the coordinates of points in each cluster to calculate the new centroids
         for (int i = 0; i < num_points; i++)
         {
-            int centroid = points[i].cluster;
+            int centroid = clusters[i];
             counts[centroid]++;
             for (int d = 0; d < dim; d++)
             {
-                new_sums[centroid][d] += points[i].features[d];
+                new_sums[centroid][d] += data[i * dim + d];
             }
         }
 
