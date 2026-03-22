@@ -2,7 +2,7 @@
 #define KMEANS_H
 
 /**
- * @param points: Array of Point structs
+ * @param points: Array of data points, where each point is represented as a flat array of features (size: num_points * dim)
  * @param num_points: Total points in the dataset
  * @param dim: Number of dimensions (features) per point
  * @param k: Number of clusters to find

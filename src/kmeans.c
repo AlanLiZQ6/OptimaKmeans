@@ -1,3 +1,4 @@
+// example main.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -18,7 +19,7 @@ static double dist(double *p1, double *p2, int dim)
     // Euclidean distance: sqrt((x1-x2)^2 + (y1-y2)^2 + ...)
     for (int i = 0; i < dim; i++)
     {
-        sum += pow(p1[i] - p2[i], 2);
+        sum += (p1[i] - p2[i])*(p1[i] - p2[i]);
     }
     return sqrt(sum);
 }
