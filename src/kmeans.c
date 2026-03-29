@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include "kmeans.h"
+#include <string.h>
 
 /**
  * @brief Calculates the Euclidean distance between two points
@@ -28,6 +29,8 @@ double *kmeans(double *data, int num_points, int dim, int k, int max_iteration, 
     // Allocate memory for centroids
     // centroids is a 1D array [k * dim]
     double *centroids = malloc(k * dim * sizeof(double));
+
+    memset(clusters, -1, num_points * sizeof(int));
 
     // Pick random points as starting centroids
     // srand(time(NULL));
