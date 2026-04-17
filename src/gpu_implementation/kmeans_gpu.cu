@@ -145,7 +145,8 @@ __global__ void calculate_centroid(double *device_new_sums, int *device_num_poin
  * @param finished_iterations The number of iterations completed before convergence
  * @return A pointer to the final centroids
  */
-double* kmeans_gpu(double *h_data, int num_points, int dimension, int k, int max_iteration, int *host_clusters, int *finished_iterations)
+double* kmeans_gpu(double *h_data, int num_points, int dimension, int k, int max_iteration,
+                   int *host_clusters, int *finished_iterations, int threads_per_block)
 {
     // The space to store the initial centroids
     double *host_initial_centroids = (double *)malloc((size_t)k * dimension * sizeof(double));
@@ -197,7 +198,7 @@ double* kmeans_gpu(double *h_data, int num_points, int dimension, int k, int max
     cudaMemcpy(device_centroids, host_initial_centroids, k * dimension * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(device_clusters, host_clusters, num_points * sizeof(int), cudaMemcpyHostToDevice);
 
-    int thread_per_block = 256;
+    int thread_per_block = (threads_per_block > 0) ? threads_per_block : 256;
     // Number of blocks GPU needed to lanuch. We would like all points are covered by threads 
     int blocksPerGrid_Points = (num_points + thread_per_block - 1) / thread_per_block;
     size_t shared_mem_size = k * dimension * sizeof(double);

@@ -1,0 +1,29 @@
+{
+  "gpu": {
+    "available": true,
+    "gpus": [
+      {
+        "driver_version": "590.48.01",
+        "index": 0,
+        "max_threads_per_block": 1024,
+        "mem_clock_mhz": 5001,
+        "memory_total_mib": 15360,
+        "name": "Tesla T4",
+        "power_limit_w": 0,
+        "sm_clock_mhz": 1590,
+        "temperature_c": 42,
+        "uuid": "GPU-bfb86c81-5623-bf9e-167c-313e9481e7da",
+        "warp_size": 32
+      }
+    ],
+    "raw_error": "",
+    "tool": "nvidia-smi"
+  },
+  "system": {
+    "cuda_compiler_available": true,
+    "hostname": "ece023.ece.local.cmu.edu",
+    "nvcc_version_text": "Build cuda_13.1.r13.1/compiler.36836380_0",
+    "platform": "Linux-4.18.0-553.89.1.el8_10.x86_64-x86_64-with-redhat-8.10-Ootpa",
+    "python": "3.6.8"
+  }
+}

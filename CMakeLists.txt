@@ -7,3 +7,6 @@ find_package(CUDAToolkit REQUIRED)
 add_subdirectory(src)
 add_executable(example main.c)
 target_link_libraries(example optima_kmeans m)
+
+add_executable(autotune autotune.c)
+target_link_libraries(autotune optima_kmeans m)
