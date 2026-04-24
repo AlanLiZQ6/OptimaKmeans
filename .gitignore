@@ -63,8 +63,6 @@ __pycache__/
 # data
 data/
 autotune_cache.json
-src/CMakeLists.txt
-CMakeLists.txt
 
 dataset/
 
