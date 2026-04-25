@@ -2,7 +2,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# GPU version: base | warp  (default: warp)
+# GPU version: base | warp | warpmem | warpmemfound | atomicshare  (default: warp)
 GPU_VERSION="${1:-warp}"
 
 cd "$SCRIPT_DIR"

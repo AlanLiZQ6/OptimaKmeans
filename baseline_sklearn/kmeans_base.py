@@ -22,10 +22,8 @@ def main():
 
     print(f"Dataset: {dataset.shape[0]} points, {dataset.shape[1]} dimensions")
 
-    # Match C code: use first k rows as initial centroids
     init_centroids = dataset[:5].copy()
 
-    # Run KMeans with same parameters as mlpack baseline
     kmeans = KMeans(n_clusters=5, max_iter=500, n_init=1, tol=0, init=init_centroids, algorithm='lloyd')
 
     start = time.time()
