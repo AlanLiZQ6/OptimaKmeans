@@ -1,0 +1,6 @@
+{
+  "CACHE_DIR": "./data/f1_cache",
+  "DATA_DIR": "./data/f1_data/raw",
+  "EXTRACT_DIR": "./data/f1_data/extracted",
+  "PROCESS_DIR": "./data/f1_data/processed"
+}

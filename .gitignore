@@ -64,7 +64,7 @@ __pycache__/
 data/
 autotune_cache.json
 
-dataset/
+dataset/data/
 
 external_baseline/
 
