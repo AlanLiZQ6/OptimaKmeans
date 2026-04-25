@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//extern
 double* kmeans_gpu(double *h_data, int num_points, int dim, int k, int max_iteration,
                    int *h_clusters, int *finished_iterations, int threads_per_block);
 int optima_load_data_bin(const char* filename, double** data, int* n, int* d) {

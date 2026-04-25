@@ -91,7 +91,6 @@ __global__ void centroid_sum(double *device_data, int *device_clusters, double *
     int lane = threadIdx.x & 31;
     int leader = __ffs(group) - 1;
 
-    // TODO: write comment
     for (int d = 0; d < dimensions; d++) {
         double v = device_data[idx + (d * N)]; 
         for (int offset = 16; offset > 0; offset >>= 1) {

@@ -16,6 +16,12 @@ import sys
 import time
 
 
+ALL_VARIANTS = [
+	"cpu",
+	"gpu",
+]
+
+
 def parse_int_list(raw):
 	vals = []
 	for x in raw.split(','):
@@ -196,7 +202,12 @@ def main():
 		default="./data/final_processed.csv",
 		help="Input dataset CSV path for autotune (default: ./data/final_processed.csv)",
 	)
-	parser.add_argument("--variants", default="baseline,find_warp", help="Comma-separated variants")
+	parser.add_argument(
+		"--variants",
+		default="all",
+		help="Comma-separated variants, or 'all' (default) to use all supported variants",
+	)
+	parser.add_argument("--list-variants", action="store_true", help="Print supported variants and exit")
 	parser.add_argument(
 		"--threads",
 		default="auto",
@@ -218,7 +229,20 @@ def main():
 
 	args = parser.parse_args()
 
-	variants = parse_str_list(args.variants)
+	if args.list_variants:
+		print("\n".join(ALL_VARIANTS))
+		return 0
+
+	if args.variants.strip().lower() == "all":
+		variants = list(ALL_VARIANTS)
+	else:
+		variants = parse_str_list(args.variants)
+	unknown = [v for v in variants if v not in ALL_VARIANTS]
+	if unknown:
+		print("[warn] unknown variants: {}".format(", ".join(unknown)))
+		print("[warn] supported variants: {}".format(", ".join(ALL_VARIANTS)))
+		print("[warn] continuing anyway (runner may accept arbitrary --variant values)")
+
 	repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 	hw, probe_source, probe_err = probe_hardware(repo_root)
 	if hw is None:

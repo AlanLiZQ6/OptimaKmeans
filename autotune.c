@@ -18,10 +18,22 @@ static void print_usage(const char *prog) {
             "Usage: %s [--data PATH] [--k INT] [--max-iter INT] "
             "[--variant NAME] [--threads INT]\n"
             "\n"
+            "Variants:\n"
+            "  cpu            Run CPU reference implementation\n"
+            "  gpu            Run GPU implementation\n"
+            "\n"
             "Examples:\n"
-            "  %s --data ../data/final_processed.csv --k 8 --variant baseline --threads 256\n",
+            "  %s --data ../data/final_processed.csv --k 8 --variant gpu --threads 256\n",
             prog,
             prog);
+}
+
+static int is_gpu_variant(const char *v) {
+    return (strcmp(v, "gpu") == 0);
+}
+
+static int is_cpu_variant(const char *v) {
+    return (strcmp(v, "cpu") == 0);
 }
 
 static int parse_int_arg(const char *value, int *out) {
@@ -40,7 +52,7 @@ static int parse_int_arg(const char *value, int *out) {
 static int parse_args(int argc, char **argv, Options *opt) {
     int i;
     opt->data_path = "../data/final_processed.csv";
-    opt->variant = "baseline";
+    opt->variant = "gpu";
     opt->k = 5;
     opt->max_iter = 10000;
     opt->threads = 256;
@@ -84,6 +96,7 @@ int main(int argc, char **argv) {
     int n = 0;
     int d = 0;
     int parse_status;
+    int use_gpu = 1;
 
     parse_status = parse_args(argc, argv, &opt);
     if (parse_status != 0) {
@@ -95,10 +108,16 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (strcmp(opt.variant, "baseline") != 0) {
+    if (is_cpu_variant(opt.variant)) {
+        use_gpu = 0;
+    } else if (is_gpu_variant(opt.variant)) {
+        use_gpu = 1;
+    } else {
         fprintf(stderr,
-                "Note: --variant=%s is accepted for tuning metadata, but current binary exposes one GPU implementation.\n",
+                "Unknown --variant=%s. Supported: cpu, gpu\n",
                 opt.variant);
+        optima_free_data(data, NULL, NULL);
+        return 2;
     }
 
     optima_malloc_clusters(&clusters, n);
@@ -109,11 +128,20 @@ int main(int argc, char **argv) {
         double elapsed_sec;
         double inertia;
         KMeansResult gpu_result;
+        double *cpu_centroids = NULL;
+        double *centroids = NULL;
         int i;
         int j;
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
-        gpu_result = optima_kmeans_gpu_threads(data, n, d, opt.k, opt.max_iter, clusters, opt.threads);
+        if (use_gpu) {
+            gpu_result = optima_kmeans_gpu_threads(data, n, d, opt.k, opt.max_iter, clusters, opt.threads);
+            centroids = gpu_result.centroids;
+        } else {
+            cpu_centroids = optima_kmeans(data, n, d, opt.k, opt.max_iter, clusters);
+            centroids = cpu_centroids;
+            gpu_result.iterations = -1;
+        }
         clock_gettime(CLOCK_MONOTONIC, &t1);
 
         elapsed_sec = (double)(t1.tv_sec - t0.tv_sec) +
@@ -138,13 +166,17 @@ int main(int argc, char **argv) {
             }
             for (j = 0; j < d; j++) {
                 /* N-major indexing: point i, dimension j */
-                double diff = data[i * d + j] - gpu_result.centroids[c * d + j];
+                double diff = data[i * d + j] - centroids[c * d + j];
                 inertia += diff * diff;
             }
         }
         printf("inertia: %.10f\n", inertia);
 
-        optima_free_data(NULL, gpu_result.centroids, NULL);
+        if (use_gpu) {
+            optima_free_data(NULL, gpu_result.centroids, NULL);
+        } else {
+            optima_free_data(NULL, cpu_centroids, NULL);
+        }
     }
 
     optima_free_data(data, NULL, clusters);
