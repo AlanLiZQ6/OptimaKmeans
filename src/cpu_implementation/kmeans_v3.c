@@ -35,17 +35,14 @@ float *kmeans(float *data, int num_points, int dim, int k, int max_iteration, in
         }
     }
 
-    #pragma omp parallel
+    for (int iter = 0; iter < max_iteration; iter++)
     {
-        for (int iter = 0; iter < max_iteration; iter++)
-        {
-            #pragma omp single
-            {
-                centroid_changed = 0;
-                memset(counts, 0, k * sizeof(int));
-                memset(new_sums, 0, k * dim * sizeof(float));
-            }
+        centroid_changed = 0;
+        memset(counts, 0, k * sizeof(int));
+        memset(new_sums, 0, k * dim * sizeof(float));
 
+        #pragma omp parallel
+        {
             #pragma omp for reduction(| : centroid_changed)
             for (int i = 0; i < num_points; i++)
             {
@@ -66,17 +63,17 @@ float *kmeans(float *data, int num_points, int dim, int k, int max_iteration, in
                     centroid_changed = 1;
                 }
             }
+        }
 
-            if (!centroid_changed)
-            {
-                #pragma omp single
-                {
-                    *iter_converge = iter;
-                    printf("Converged at iteration %d\n", iter);
-                }
-                break;
-            }
+        if (!centroid_changed)
+        {
+            *iter_converge = iter;
+            printf("Converged at iteration %d\n", iter);
+            break;
+        }
 
+        #pragma omp parallel
+        {
             #pragma omp for schedule(static) reduction(+ : counts[ : k], new_sums[ : k * dim])
             for (int i = 0; i < num_points; i++)
             {

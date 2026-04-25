@@ -38,52 +38,50 @@ float *kmeans(float *data, int num_points, int dim, int k, int max_iteration, in
         }
     }
 
-    #pragma omp parallel
-    {
+    
         for (int iter = 0; iter < max_iteration; iter++)
         {
-            #pragma omp single
+            
+            centroid_changed = 0;
+            memset(counts, 0, k * sizeof(int));
+            memset(new_sums, 0, k * dim * sizeof(float));
+            
+            #pragma omp parallel
             {
-                centroid_changed = 0;
-                memset(counts, 0, k * sizeof(int));
-                memset(new_sums, 0, k * dim * sizeof(float));
-            }
-
-            // --- Assignment step ---
-            #pragma omp for reduction(| : centroid_changed)
-            for (int i = 0; i < num_points; i++)
-            {
-                float min_d = 1e18f;
-                int closest_centroid = 0;
-                for (int centroid = 0; centroid < k; centroid++)
+                // --- Assignment step ---
+                #pragma omp for reduction(| : centroid_changed)
+                for (int i = 0; i < num_points; i++)
                 {
-                    float distance = dist_sq(&data[i * dim], &centroids[centroid * dim], dim);
-                    if (distance < min_d)
+                    float min_d = 1e18f;
+                    int closest_centroid = 0;
+                    for (int centroid = 0; centroid < k; centroid++)
                     {
-                        min_d = distance;
-                        closest_centroid = centroid;
+                        float distance = dist_sq(&data[i * dim], &centroids[centroid * dim], dim);
+                        if (distance < min_d)
+                        {
+                            min_d = distance;
+                            closest_centroid = centroid;
+                        }
                     }
-                }
-                if (clusters[i] != closest_centroid)
-                {
-                    clusters[i] = closest_centroid;
-                    centroid_changed = 1;
+                    if (clusters[i] != closest_centroid)
+                    {
+                        clusters[i] = closest_centroid;
+                        centroid_changed = 1;
+                    }
                 }
             }
 
             if (!centroid_changed)
             {
-                #pragma omp single
-                {
-                    *iter_converge = iter;
-                    printf("Converged at iteration %d\n", iter);
-                }
+                *iter_converge = iter;
+                printf("Converged at iteration %d\n", iter);
                 break;
             }
 
             // --- Update step (centroid sums & counts) ---
             // First Version : each thread accumulates into its own slice,
             // then one thread serially merges all slices.
+            #pragma omp parallel
             {
                 int tid = omp_get_thread_num();
                 float *local_sums = &all_local_sums[tid * k * dim];
@@ -112,21 +110,20 @@ float *kmeans(float *data, int num_points, int dim, int k, int max_iteration, in
                         }
                     }
                 }
-            }
-
-            // --- Recompute centroids from sums/counts ---
-            #pragma omp for schedule(static)
-            for (int centroid = 0; centroid < k; centroid++)
-            {
-                if (counts[centroid] > 0)
+            
+                // --- Recompute centroids from sums/counts ---
+                #pragma omp for schedule(static)
+                for (int centroid = 0; centroid < k; centroid++)
                 {
-                    for (int d = 0; d < dim; d++)
-                        centroids[centroid * dim + d] = new_sums[centroid * dim + d] / counts[centroid];
+                    if (counts[centroid] > 0)
+                    {
+                        for (int d = 0; d < dim; d++)
+                            centroids[centroid * dim + d] = new_sums[centroid * dim + d] / counts[centroid];
+                    }
                 }
             }
         }
-    }
-    
+
     free(new_sums);
     free(counts);
     free(all_local_sums);
